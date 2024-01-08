@@ -8,6 +8,7 @@ import com.bijanghanei.orderservice.model.OrderLineItems;
 import com.bijanghanei.orderservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,7 +23,7 @@ import java.util.UUID;
 @Slf4j
 public class OrderService {
     private final OrderRepository orderRepository;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
     public void createOrder(OrderRequest orderRequest) {
         Order order = new Order();
         List<OrderLineItems> orderLineItemsList = orderRequest.getOrderLineItemsListRequest()
@@ -35,8 +36,8 @@ public class OrderService {
                 .stream().map(orderLineItems -> orderLineItems.getSkuCode()).toList();
 
 //        Call inventory-service from order service
-        InventoryResponse[] inventoryResponseArray = webClient.get()
-                .uri("http://localhost:8082/api/inventory",
+        InventoryResponse[] inventoryResponseArray = webClientBuilder.build().get()
+                .uri("http://inventory-service/api/inventory",
                         uriBuilder -> uriBuilder.queryParam("skuCode",skuCodes).build()
                 ).retrieve()
                 .bodyToMono(InventoryResponse[].class)
